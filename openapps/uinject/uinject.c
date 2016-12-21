@@ -23,10 +23,14 @@ static const uint8_t uinject_dst_addr[]   = {
 void uinject_timer_cb(opentimer_id_t id);
 void uinject_task_cb(void);
 
+void adxl_sample_ready_cb(void);
+
 //=========================== public ==========================================
 
 void uinject_init() {
-   
+    // do not run if DAGroot
+    if(idmanager_getIsDAGroot()==TRUE) return;
+
    // clear local variables
    memset(&uinject_vars,0,sizeof(uinject_vars_t));
    
@@ -38,6 +42,14 @@ void uinject_init() {
       TIMER_PERIODIC,TIME_MS,
       uinject_timer_cb
    );
+   
+    if (adxl346_is_present()==1) {
+       adxl346_setCallback(adxl_sample_ready_cb);
+
+       adxl346_init();
+    }
+
+    adxl_sample_ready_cb();
 }
 
 void uinject_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
@@ -118,4 +130,26 @@ void uinject_task_cb() {
    if ((openudp_send(pkt))==E_FAIL) {
       openqueue_freePacketBuffer(pkt);
    }
+}
+
+#define SAMPLES_PER_READ (6u)
+
+void adxl_sample_ready_cb(void){
+
+    uint8_t buffer[255] = {0};
+    // Read number of samples available
+    uint8_t samples = adxl346_samplesAvailable();
+
+    // Read samples for each axis
+    adxl346_readSamples(buffer, samples);
+
+    // We expect 6 samples per read
+    if (samples == SAMPLES_PER_READ) {
+        // Copy samples to radio packet
+        //memcpy(radioBuffer_ptr, buffer, samples);
+
+        // Update pointer and counter
+        //radioBuffer_ptr += samples;
+        //counter += samples;
+    }
 }

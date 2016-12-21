@@ -41,7 +41,7 @@ void sensors_init(void) {
    }
    
    if (adxl346_is_present()==1) {
-      adxl346_init();
+      /*adxl346_init();*/
       sensors_vars.sensorsTypes[SENSOR_XACCELERATION] = 1;
       sensors_vars.sensorsTypes[SENSOR_YACCELERATION] = 1;
       sensors_vars.sensorsTypes[SENSOR_ZACCELERATION] = 1;
